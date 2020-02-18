@@ -63,10 +63,10 @@ class ImageProcessor():
         self.blue_low = 93
         self.blue_high = 131
         # Update HSV Boundaries
-        self.HSVboundaries = [ #([165, 100, 40], [180, 255, 255]), #red upper range
-                               #([0, 100, 40], [15, 255, 255]),    # red lower range
-                               #([40, 50, 40], [80, 255, 255]),  # green range
-                               ([self.blue_low, self.saturation_low, self.vue_low],[self.blue_high, 255, 255])]  # blue range
+        self.HSVboundaries = [ ([165, 100, 40], [180, 255, 255]), #red upper range
+                               ([0, 100, 40], [15, 255, 255])]    # red lower range
+                               #([40, 50, 40], [80, 255, 255])]  # green range
+                               #([self.blue_low, self.saturation_low, self.vue_low],[self.blue_high, 255, 255])]  # blue range
 
 
     def process(self,msg):
@@ -90,6 +90,7 @@ class ImageProcessor():
             cam0_out = cv2.circle(cam0_out, x1,2,(255,0,0),2)
             cam0_out = cv2.circle(cam0_out, x2,2,(255,0,0),2)
             l = tta.get_line_equation(x1,x2)
+            print(l)
             ab = l[0]/l[1]
             cb = l[2]/l[1]
             x1 = (0, int(-ab*0. -cb))
@@ -106,6 +107,7 @@ class ImageProcessor():
             cam1_out = cv2.circle(cam1_out, x1,2,(255,0,0),2)
             cam1_out = cv2.circle(cam1_out, x2,2,(255,0,0),2)
             l_p = tta.get_line_equation(x1,x2)
+            print(l_p)
             ab = l_p[0]/l_p[1]
             cb = l_p[2]/l_p[1]
             x1 = (0, int(-ab*0. -cb))
@@ -122,14 +124,22 @@ class ImageProcessor():
             cam2_out = cv2.circle(cam2_out, x1,2,(255,0,0),2)
             cam2_out = cv2.circle(cam2_out, x2,2,(255,0,0),2)
             l_pp = tta.get_line_equation(x1,x2)
+            print(l_pp)
             ab = l_pp[0]/l_pp[1]
             cb = l_pp[2]/l_pp[1]
             x1 = (0, int(-ab*0. -cb))
             x2 = (752, int(-ab*752 -cb))
             cam2_out = cv2.line(cam2_out, x1, x2, (0,255,0), 2)
 
+            #reproject
             trifocal_tensor = tta.get_trifocal_tensor(self.P1, self.P2)
             l_projected = tta.transport_line(l_p.reshape(3,1), l_pp.reshape(3,1), trifocal_tensor)
+            ab = l_projected[0]/l_projected[1]
+            cb = l_projected[2]/l_projected[1]
+            x1 = (0, int(-ab*0. -cb))
+            x2 = (752, int(-ab*752 -cb))
+            cam0_out = cv2.line(cam0_out, x1, x2, (255,255,0), 2)
+
             print(l_projected)
 
 

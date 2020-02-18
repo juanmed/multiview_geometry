@@ -46,6 +46,9 @@ def transport_line(l_p, l_pp, tf):
 	l = np.zeros((3))
 	for i in range(3):
 		l[i] = np.dot(l_p.T, np.dot(tf[:,:,i], l_pp))
+	l[0] = l[0]/l[2]
+	l[1] = l[1]/l[2]
+	l[2] = 1.0
 	return l
 
 
