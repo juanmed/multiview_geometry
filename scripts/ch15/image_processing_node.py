@@ -30,7 +30,6 @@ class ImageProcessor():
         self.cam1_pub = rospy.Publisher("/threeview/cam1", Image, queue_size = 2)
         self.cam2_pub = rospy.Publisher("/threeview/cam2", Image, queue_size = 2)
 
-
         self.cam0_img_n = 0
         self.cam1_img_n = 0
         self.cam2_img_n = 0
@@ -42,13 +41,16 @@ class ImageProcessor():
         self.cam1_params = None
         self.cam2_params = None
 
-        self.R0 = np.diag([1.0,1.0,1.0])
+        yaw0 = 0.
+        yaw1 = 0.087266463
+        yaw2 = 0.174532925
+        self.R0 = tf.transformations.euler_matrix(yaw0, 0, 0, axes = 'rzyx')[:3,:3].T #np.diag([1.0,1.0,1.0])
         self.t0 = np.array([0.,0.,0.])
         self.K0 = None
-        self.R1 = np.diag([1.0,1.0,1.0])
+        self.R1 = tf.transformations.euler_matrix(yaw1, 0, 0, axes = 'rzyx')[:3,:3].T #np.diag([1.0,1.0,1.0])
         self.t1 = np.array([-0.3,0.,0.])
         self.K1 = None
-        self.R2 = np.diag([1.0, 1.0, 1.0])
+        self.R2 = tf.transformations.euler_matrix(yaw2, 0, 0, axes = 'rzyx')[:3,:3].T #np.diag([1.0, 1.0, 1.0])
         self.t2 = np.array([-0.6, 0., 0.])
         self.K2 = None
         self.P0 = np.hstack((self.R0, self.t0.reshape(3,1)))
@@ -90,7 +92,7 @@ class ImageProcessor():
             cam0_out = cv2.circle(cam0_out, x1,2,(255,0,0),2)
             cam0_out = cv2.circle(cam0_out, x2,2,(255,0,0),2)
             l = tta.get_line_equation(x1,x2)
-            print(l)
+            print("l: {}".format(l))
             ab = l[0]/l[1]
             cb = l[2]/l[1]
             x1 = (0, int(-ab*0. -cb))
@@ -107,7 +109,7 @@ class ImageProcessor():
             cam1_out = cv2.circle(cam1_out, x1,2,(255,0,0),2)
             cam1_out = cv2.circle(cam1_out, x2,2,(255,0,0),2)
             l_p = tta.get_line_equation(x1,x2)
-            print(l_p)
+            print("l': {}".format(l_p))
             ab = l_p[0]/l_p[1]
             cb = l_p[2]/l_p[1]
             x1 = (0, int(-ab*0. -cb))
@@ -124,7 +126,7 @@ class ImageProcessor():
             cam2_out = cv2.circle(cam2_out, x1,2,(255,0,0),2)
             cam2_out = cv2.circle(cam2_out, x2,2,(255,0,0),2)
             l_pp = tta.get_line_equation(x1,x2)
-            print(l_pp)
+            print("l'': {}".format(l_pp))
             ab = l_pp[0]/l_pp[1]
             cb = l_pp[2]/l_pp[1]
             x1 = (0, int(-ab*0. -cb))
@@ -139,8 +141,12 @@ class ImageProcessor():
             x1 = (0, int(-ab*0. -cb))
             x2 = (752, int(-ab*752 -cb))
             cam0_out = cv2.line(cam0_out, x1, x2, (255,255,0), 2)
+            print("l_projected: {}".format(l_projected))
 
-            print(l_projected)
+            ep, epp =tta.get_epipoles(trifocal_tensor)
+            f21 = tta.get_fundamental_matrix21(ep,trifocal_tensor,epp)
+            f31 = tta.get_fundamental_matrix31(epp, trifocal_tensor,ep)
+            print(f21, f31)
 
 
             img_msg = self.bridge.cv2_to_imgmsg(cam0_out, "rgb8")
@@ -153,6 +159,7 @@ class ImageProcessor():
 
 
     def get_line_coefficients(self, mask):
+
         return
 
     def cam0_cb(self, msg):
