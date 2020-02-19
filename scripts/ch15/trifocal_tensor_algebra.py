@@ -52,28 +52,26 @@ def transport_line(l_p, l_pp, tf):
 
 def get_epipoles(tf):
     """
+    Compute epipoles of 2nd a 3rd camera as seen in the first camera
+    tf trifocal tensor
     """
-    # left eigenvalue
-    
+    # left null vector
     u = list()
     for i in range(3):
-        #eigenvals, eigenvecs = np.linalg.eig(tf[:,:,i].T)
-        #left_vec = eigenvecs[:,0].T
         ns = nullspace(tf[:,:,i].T)
         left_vec = ns[:,0]
         u.append(left_vec.reshape(3,1))
     u = np.hstack(u)
 
+    # right null vector
     v = list()
     for i in range(3):
-        #eigenvals, eigenvecs = np.linalg.eig(tf[:,:,i])
-        #right_vec = eigenvecs[:,0].T
-        #print(i, np.dot(tf[:,:,i], right_vec))
         ns = nullspace(tf[:,:,i])
         right_vec = ns[:,0]
         v.append(right_vec.reshape(3,1))
     v = np.hstack(v)
 
+    # epipoles
     ep = nullspace(u.T)
     epp = nullspace(v.T)
     return ep, epp    
@@ -92,11 +90,23 @@ def nullspace(A, atol=1e-13, rtol=0):
     return ns
 
 def get_fundamental_matrix21(ep, tf, epp):
+    """
+    Compute fundamental matrix 21
+    ep 2n camera epipole
+    epp 3rd camera epipole
+    tf trifocal tensor
+    """
     F = np.dot(hat(ep), np.dot(tf[:,:,0], np.dot(tf[:,:,1], np.dot(tf[:,:,2],epp))))
     return F
 
 
 def get_fundamental_matrix31(epp, tf, ep):
+    """
+    Compute fundamental matrix 31
+    ep 2n camera epipole
+    epp 3rd camera epipole
+    tf trifocal tensor
+    """
     F = np.dot(hat(epp), np.dot(tf[:,:,0].T, np.dot(tf[:,:,1].T, np.dot(tf[:,:,2].T,ep))))
     return F
 
